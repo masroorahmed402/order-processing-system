@@ -1,0 +1,48 @@
+# Shared settings. LocalStack endpoint and dummy credentials live in the "local" profile
+# (payment-service-local.yml), active unless another profile is chosen.
+server:
+  port: 8083
+
+spring:
+  application:
+    name: payment-service
+  profiles:
+    default: local
+  cloud:
+    aws:
+      sqs:
+        listener:
+          max-concurrent-messages: 20
+          max-messages-per-poll: 10
+          poll-timeout: 10s
+      cloudwatch:
+        enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  cloudwatch:
+    metrics:
+      export:
+        namespace: OrderProcessing
+        step: 30s
+
+messaging:
+  backoff:
+    base-seconds: 2
+    max-seconds: 300
+
+payment:
+  table: payments
+  # A CHARGING claim older than this is assumed dead (consumer crashed mid-charge) and taken over.
+  # Must be below the queue visibility timeout (30s) so the redelivered message can take it over.
+  claim-stale-after: 20s
+  gateway:
+    decline-above: 5000.00
+    transient-failure-rate: 0.0
+
+logging:
+  level:
+    io.awspring.cloud.sqs.listener: WARN
