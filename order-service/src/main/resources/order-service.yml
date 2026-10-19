@@ -6,7 +6,10 @@ server:
   tomcat:
     threads:
       max: 200
-    accept-count: 1000
+      # Pre-start the worker threads so a burst does not wait for the pool to grow.
+      min-spare: 200
+    # Listen backlog (capped by net.core.somaxconn, raised in docker-compose.yml).
+    accept-count: 4096
 
 spring:
   application:
@@ -68,3 +71,5 @@ idempotency:
 logging:
   level:
     io.awspring.cloud.sqs.listener: WARN
+    # BackoffErrorHandler already logs every failed message once, with its reason and retry delay.
+    io.awspring.cloud.sqs.listener.sink.AbstractMessageProcessingPipelineSink: "OFF"

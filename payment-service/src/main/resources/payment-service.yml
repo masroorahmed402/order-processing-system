@@ -46,3 +46,5 @@ payment:
 logging:
   level:
     io.awspring.cloud.sqs.listener: WARN
+    # BackoffErrorHandler already logs every failed message once, with its reason and retry delay.
+    io.awspring.cloud.sqs.listener.sink.AbstractMessageProcessingPipelineSink: "OFF"

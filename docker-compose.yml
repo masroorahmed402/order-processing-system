@@ -53,6 +53,10 @@ services:
     environment:
       <<: *service-env
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/orders
+    # A cold JVM accepts connections slowly; give a 1,000-connection burst room to queue.
+    sysctls:
+      net.core.somaxconn: 4096
+      net.ipv4.tcp_max_syn_backlog: 4096
     ports:
       - "8081:8081"
     depends_on:
