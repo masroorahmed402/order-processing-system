@@ -25,3 +25,7 @@ crash.log
 load-test/results/
 k6-summary*.json
 *.k6.json
+
+# Local assistant settings (kept out of the repo)
+.claude/
+CLAUDE.md
