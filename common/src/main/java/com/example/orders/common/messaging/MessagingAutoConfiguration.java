@@ -9,9 +9,13 @@ import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.messaging.converter.CompositeMessageConverter;
+import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.converter.StringMessageConverter;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.model.Message;
+
+import java.util.List;
 
 /**
  * Messaging beans shared by all services. Runs before Spring Cloud AWS's own auto-configuration
@@ -30,7 +34,13 @@ public class MessagingAutoConfiguration {
     @ConditionalOnMissingBean
     public MessagingMessageConverter<Message> sqsMessagingMessageConverter() {
         SqsMessagingMessageConverter converter = new SqsMessagingMessageConverter();
-        converter.setPayloadMessageConverter(new StringMessageConverter());
+        // String first so bodies pass through untouched; the Jackson converter is only there because
+        // Spring Cloud AWS insists on configuring an ObjectMapper on the payload converter.
+        StringMessageConverter strings = new StringMessageConverter();
+        strings.setSerializedPayloadClass(String.class);
+        MappingJackson2MessageConverter json = new MappingJackson2MessageConverter();
+        json.setSerializedPayloadClass(String.class);
+        converter.setPayloadMessageConverter(new CompositeMessageConverter(List.of(strings, json)));
         converter.setPayloadTypeMapper(message -> String.class);
         converter.doNotSendPayloadTypeHeader();
         return converter;

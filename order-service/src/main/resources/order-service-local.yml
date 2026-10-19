@@ -1,0 +1,15 @@
+# Local development against docker-compose (Postgres + LocalStack).
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/orders
+    username: orders
+    password: orders
+  cloud:
+    aws:
+      endpoint: http://localhost:4566
+      region:
+        static: us-east-1
+      # LocalStack dummy credentials (LocalStack accepts any value). Never put real keys here.
+      credentials:
+        access-key: test
+        secret-key: test

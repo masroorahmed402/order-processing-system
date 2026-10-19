@@ -1,0 +1,70 @@
+# Shared settings. LocalStack endpoint, dummy credentials and the local database live in the
+# "local" profile (order-service-local.yml), active unless another profile is chosen. In AWS run
+# with SPRING_PROFILES_ACTIVE=aws: the SDK then uses the ECS task role and the real endpoints.
+server:
+  port: 8081
+  tomcat:
+    threads:
+      max: 200
+    accept-count: 1000
+
+spring:
+  application:
+    name: order-service
+  profiles:
+    default: local
+  datasource:
+    hikari:
+      maximum-pool-size: 40
+      minimum-idle: 10
+      connection-timeout: 10000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  cloud:
+    aws:
+      sqs:
+        listener:
+          max-concurrent-messages: 20
+          max-messages-per-poll: 10
+          poll-timeout: 10s
+      cloudwatch:
+        enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  cloudwatch:
+    metrics:
+      export:
+        namespace: OrderProcessing
+        step: 30s
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: false
+
+messaging:
+  backoff:
+    base-seconds: 2
+    max-seconds: 300
+
+outbox:
+  poll-interval-ms: 100
+  batch-size: 100
+
+idempotency:
+  table: idempotency_keys
+  ttl: 24h
+  in-progress-wait: 3s
+  poll-interval: 50ms
+  stale-after: 30s
+
+logging:
+  level:
+    io.awspring.cloud.sqs.listener: WARN
