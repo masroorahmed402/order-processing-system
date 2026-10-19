@@ -1,7 +1,9 @@
 package com.example.orders.order.config;
 
+import com.example.orders.order.idempotency.IdempotencyProperties;
 import io.awspring.cloud.autoconfigure.core.AwsClientCustomizer;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.http.SdkHttpClient;
@@ -11,6 +13,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClientBuilder;
 import java.time.Clock;
 
 @Configuration
+@EnableConfigurationProperties(IdempotencyProperties.class)
 public class OrderServiceConfig {
 
     @Bean
