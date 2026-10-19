@@ -1,0 +1,103 @@
+# Local environment.
+#   docker compose up -d                    -> infrastructure only (Postgres + LocalStack)
+#   docker compose --profile apps up -d     -> infrastructure + the three services
+# Image versions are pinned on purpose; bump them deliberately.
+name: order-processing
+
+x-service-env: &service-env
+  SPRING_CLOUD_AWS_ENDPOINT: http://localstack:4566
+  SPRING_CLOUD_AWS_REGION_STATIC: us-east-1
+  # LocalStack accepts any credentials; these are dummy values, never real keys.
+  SPRING_CLOUD_AWS_CREDENTIALS_ACCESS_KEY: test
+  SPRING_CLOUD_AWS_CREDENTIALS_SECRET_KEY: test
+  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=75
+
+services:
+  postgres:
+    image: postgres:16.4-alpine
+    environment:
+      POSTGRES_DB: orders
+      POSTGRES_USER: orders
+      POSTGRES_PASSWORD: orders
+    command: ["postgres", "-c", "max_connections=200"]
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orders -d orders"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  localstack:
+    image: localstack/localstack:4.0.3
+    environment:
+      SERVICES: sqs,dynamodb,cloudwatch,sns
+      AWS_DEFAULT_REGION: us-east-1
+      SQS_ENDPOINT_STRATEGY: path
+    ports:
+      - "4566:4566"
+    volumes:
+      - ./infra/localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh:ro
+    healthcheck:
+      # Healthy only once the init hook (queues, tables, seed data) has finished.
+      test: ["CMD-SHELL", "curl -sf localhost:4566/_localstack/init/ready | grep -q '\"completed\": true'"]
+      interval: 2s
+      timeout: 3s
+      retries: 60
+
+  order-service:
+    profiles: ["apps"]
+    build: ./order-service
+    environment:
+      <<: *service-env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/orders
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- localhost:8081/actuator/health | grep -q UP"]
+      interval: 3s
+      timeout: 3s
+      retries: 60
+
+  inventory-service:
+    profiles: ["apps"]
+    build: ./inventory-service
+    environment:
+      <<: *service-env
+    ports:
+      - "8082:8082"
+    depends_on:
+      localstack:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- localhost:8082/actuator/health | grep -q UP"]
+      interval: 3s
+      timeout: 3s
+      retries: 60
+
+  payment-service:
+    profiles: ["apps"]
+    build: ./payment-service
+    environment:
+      <<: *service-env
+      PAYMENT_GATEWAY_TRANSIENT_FAILURE_RATE: ${PAYMENT_TRANSIENT_FAILURE_RATE:-0.0}
+    ports:
+      - "8083:8083"
+    depends_on:
+      localstack:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- localhost:8083/actuator/health | grep -q UP"]
+      interval: 3s
+      timeout: 3s
+      retries: 60
+
+volumes:
+  postgres-data:
