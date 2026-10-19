@@ -1,0 +1,44 @@
+# Shared settings. LocalStack endpoint and dummy credentials live in the "local" profile
+# (inventory-service-local.yml), active unless another profile is chosen.
+server:
+  port: 8082
+
+spring:
+  application:
+    name: inventory-service
+  profiles:
+    default: local
+  cloud:
+    aws:
+      sqs:
+        listener:
+          max-concurrent-messages: 20
+          max-messages-per-poll: 10
+          poll-timeout: 10s
+      cloudwatch:
+        enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  cloudwatch:
+    metrics:
+      export:
+        namespace: OrderProcessing
+        step: 30s
+
+messaging:
+  backoff:
+    base-seconds: 2
+    max-seconds: 300
+
+inventory:
+  stock-table: inventory
+  reservation-table: inventory_reservations
+  max-transaction-attempts: 10
+
+logging:
+  level:
+    io.awspring.cloud.sqs.listener: WARN

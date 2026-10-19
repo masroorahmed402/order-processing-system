@@ -1,0 +1,11 @@
+# Local development against docker-compose LocalStack.
+spring:
+  cloud:
+    aws:
+      endpoint: http://localhost:4566
+      region:
+        static: us-east-1
+      # LocalStack dummy credentials (LocalStack accepts any value). Never put real keys here.
+      credentials:
+        access-key: test
+        secret-key: test
