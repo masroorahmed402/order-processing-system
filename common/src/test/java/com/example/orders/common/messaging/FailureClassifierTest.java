@@ -29,4 +29,11 @@ class FailureClassifierTest {
         String description = classifier.describe(new CompletionException(new IllegalStateException("db down")));
         assertThat(description).isEqualTo("IllegalStateException: db down");
     }
+
+    @Test
+    void describePrefersThePermanentExceptionOverItsRootCause() {
+        String description = classifier.describe(new CompletionException(
+                new MalformedEventException("Malformed order event: eventId is required", new NullPointerException("eventId"))));
+        assertThat(description).isEqualTo("MalformedEventException: Malformed order event: eventId is required");
+    }
 }
