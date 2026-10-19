@@ -1,1 +1,2 @@
 com.example.orders.common.messaging.MessagingAutoConfiguration
+com.example.orders.common.messaging.RetryAutoConfiguration
