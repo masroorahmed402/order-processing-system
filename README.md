@@ -1,6 +1,6 @@
 # Order Processing Microservices
 
-[![CI](https://github.com/<GITHUB_USERNAME>/<REPO>/actions/workflows/ci.yml/badge.svg)](https://github.com/<GITHUB_USERNAME>/<REPO>/actions/workflows/ci.yml)
+[![CI](https://github.com/masroorahmed402/order-processing-system/actions/workflows/ci.yml/badge.svg)](https://github.com/masroorahmed402/order-processing-system/actions/workflows/ci.yml)
 ![Java 21](https://img.shields.io/badge/Java-21-007396?logo=openjdk&logoColor=white)
 ![Spring Boot 3.3](https://img.shields.io/badge/Spring%20Boot-3.3.13-6DB33F?logo=springboot&logoColor=white)
 ![Spring Cloud AWS 3.2](https://img.shields.io/badge/Spring%20Cloud%20AWS-3.2.1-6DB33F)
@@ -23,9 +23,6 @@ tolerates **out-of-order and duplicate delivery**. Everything runs locally on Lo
 covered by Testcontainers tests, and has been load-tested with
 **1,000 concurrent orders plus 1,000 client retries: 0 errors, 0 duplicates, 0 lost orders**
 ([results](docs/load-test-results.md)).
-
-> **CI badge:** replace `<GITHUB_USERNAME>/<REPO>` in the first line of this README with your
-> GitHub user and repository name after you push.
 
 ---
 
