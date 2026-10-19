@@ -1,0 +1,39 @@
+name: Load test (1,000 orders)
+
+# Manual only: builds the services, runs them with Postgres + LocalStack in Docker, fires
+# 1,000 concurrent orders (plus a retry each) with k6 and reconciles the results.
+on:
+  workflow_dispatch:
+    inputs:
+      payment_transient_failure_rate:
+        description: Injected transient payment gateway failure rate (0.0 - 1.0)
+        default: "0.05"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  load-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Run load test and reconciliation
+        env:
+          PAYMENT_TRANSIENT_FAILURE_RATE: ${{ inputs.payment_transient_failure_rate }}
+        run: scripts/run-load-test.sh
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test-results
+          path: load-test/results/

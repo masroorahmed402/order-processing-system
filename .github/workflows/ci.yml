@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & test (unit + Testcontainers)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      # Unit tests (surefire), module integration tests and end-to-end saga tests (failsafe,
+      # Testcontainers Postgres + LocalStack), JaCoCo aggregate report.
+      - name: mvn verify
+        run: mvn -B verify
+
+      - name: Coverage summary
+        if: always()
+        run: python3 scripts/coverage-summary.py >> "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            **/target/surefire-reports/
+            **/target/failsafe-reports/
+          if-no-files-found: warn
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: |
+            e2e-tests/target/site/jacoco-aggregate/
+            **/target/site/jacoco/
+          if-no-files-found: warn
+
+  terraform:
+    name: Terraform fmt, validate & LocalStack apply
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: infra/terraform
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.16.6
+          terraform_wrapper: false
+
+      - name: terraform fmt -check
+        run: terraform fmt -check -recursive
+
+      - name: terraform init
+        run: terraform init -input=false -backend=false
+
+      - name: terraform validate
+        run: terraform validate
+
+      - name: Apply to a throwaway LocalStack (never real AWS)
+        working-directory: .
+        run: scripts/terraform-localstack.sh
