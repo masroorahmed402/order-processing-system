@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -103,7 +104,7 @@ class OrderControllerTest {
 
         mvc.perform(post("/orders").header("Idempotency-Key", "key-1").contentType(MediaType.APPLICATION_JSON).content(BODY))
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("different request body")));
+                .andExpect(jsonPath("$.detail").value(containsString("different request body")));
     }
 
     @Test

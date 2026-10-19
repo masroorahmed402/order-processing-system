@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -98,7 +99,7 @@ class SagaEndToEndIT extends E2ESupport {
         for (int i = 0; i < 10; i++) {
             calls.add(() -> placeOrder(concurrentKey, sku, 1, "5.00"));
         }
-        Set<Object> ids = new java.util.HashSet<>();
+        Set<Object> ids = new HashSet<>();
         int created = 0;
         for (Future<ResponseEntity<Map<String, Object>>> f : pool.invokeAll(calls)) {
             ResponseEntity<Map<String, Object>> r = f.get();

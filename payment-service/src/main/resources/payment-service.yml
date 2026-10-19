@@ -40,7 +40,7 @@ payment:
   # Must be below the queue visibility timeout (30s) so the redelivered message can take it over.
   claim-stale-after: 20s
   gateway:
-    decline-above: 5000.00
+    decline-above: "5000.00"
     transient-failure-rate: 0.0
 
 logging:

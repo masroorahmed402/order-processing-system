@@ -23,9 +23,11 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -70,7 +72,7 @@ class InventoryServiceTest {
         verify(publisher).publish(eq(QueueNames.ORDER_EVENTS), event.capture());
         assertThat(event.getValue().type()).isEqualTo(EventType.INVENTORY_FAILED);
         assertThat(event.getValue().reason()).isEqualTo("insufficient stock for SKU-001");
-        verify(publisher, org.mockito.Mockito.never()).publish(eq(QueueNames.PAYMENT), any());
+        verify(publisher, never()).publish(eq(QueueNames.PAYMENT), any());
     }
 
     @Test
@@ -117,6 +119,6 @@ class InventoryServiceTest {
         Reservation r = Reservation.reserved(orderId, "c", BigDecimal.ONE, List.of(
                 new LineItem("B", 1, BigDecimal.ONE), new LineItem("A", 2, BigDecimal.ONE), new LineItem("B", 3, BigDecimal.ONE)), NOW);
 
-        assertThat(r.quantitiesBySku()).containsExactly(java.util.Map.entry("A", 2), java.util.Map.entry("B", 4));
+        assertThat(r.quantitiesBySku()).containsExactly(entry("A", 2), entry("B", 4));
     }
 }
